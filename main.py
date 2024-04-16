@@ -69,28 +69,28 @@ def update_and_draw(win: cs.window, board, pos, char, ms):
         win.refresh()
         cs.napms(ms)
 
+
 def traverse(win: cs.window, board: Board, pos: Coord):
     found = board[pos.y][pos.x] == "G"
     while not found:
-        moves = possible_moves(board, pos)
-        if len(moves) == 1:
-            update_and_draw(win, board, pos, "*", 50)
+        if board[pos.y][pos.x] != "*":
+            update_and_draw(win, board, pos, "*", 200)
 
+        moves = possible_moves(board, pos)
+
+        if len(moves) == 1:
             pos = pos + moves[0]
 
             if board[pos.y][pos.x] == "G":
                 return board, True
+
         elif len(moves) > 1:
             for move in moves:
-                update_and_draw(win, board, pos, "*", 50)
-
                 board, found = traverse(win, board, pos + move)
 
                 if found:
                     break
         else:
-            update_and_draw(win, board, pos, "*", 0)
-
             return board, False
 
     return board, found
