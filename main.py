@@ -1,30 +1,7 @@
 import curses as cs
 
-class Coord:
-    def __init__(self, y=0, x=0):
-        self.set(y, x)
-
-
-    def __add__(self, other):
-        self.y = self.y + other.y
-        self.x = self.x + other.x
-
-        return self.copy()
-
-    def __str__(self):
-        return f"{(self.x, self.y)}"
-
-    def set(self, y=None, x=None):
-        self.y = y or 0
-        self.x = x or 0
-
-
-    def copy(self):
-        return Coord(self.y, self.x)
-
-
-def load_puzzle(path: str) -> tuple[list[list[str]], Coord]:
-    start = Coord()
+def load_puzzle(path: str) -> tuple[list[list[str]], tuple[int, int]]:
+    start = (0, 0)
     board = []
     with open(path, "r") as file:
         for row, line in enumerate(file):
@@ -32,62 +9,60 @@ def load_puzzle(path: str) -> tuple[list[list[str]], Coord]:
             start_col = line.find("S")
 
             if line.find("S") > 0:
-                start.set(row, start_col)
+                start = (row, start_col)
 
     return board, start
 
 
-def possible_moves(board, pos: Coord) -> list[Coord]:
+def possible_moves(board, cursr):
     moves = []
 
-    if board[pos.y+1][pos.x] not in ("█", "*", "S"):
-        moves.append(Coord(1, 0))
+    if board[cursr[0]+1][cursr[1]] not in ("█", "*", "S"):
+        moves.append((1, 0))
 
-    if board[pos.y-1][pos.x] not in ("█", "*", "S"):
-        moves.append(Coord(-1, 0))
+    if board[cursr[0]-1][cursr[1]] not in ("█", "*", "S"):
+        moves.append((-1, 0))
 
-    if board[pos.y][pos.x+1] not in ("█", "*", "S"):
-        moves.append(Coord(0, 1))
+    if board[cursr[0]][cursr[1]+1] not in ("█", "*", "S"):
+        moves.append((0, 1))
 
-    if board[pos.y][pos.x-1] not in ("█", "*", "S"):
-        moves.append(Coord(0, -1))
+    if board[cursr[0]][cursr[1]-1] not in ("█", "*", "S"):
+        moves.append((0, -1))
 
     return moves
 
 
-def update_and_draw(win: cs.window, board, pos: Coord, char, ms):
-    if board[pos.y][pos.x] != "S":
-        board[pos.y][pos.x] = char
+def update_and_draw(win: cs.window, board, pos, char, ms):
+    if board[pos[0]][pos[1]] != "S":
+        board[pos[0]][pos[1]] = char
 
-        win.move(pos.y, pos.x)
+        win.move(pos[0], pos[1])
         win.addch(char)
         win.refresh()
         cs.napms(ms)
 
-    return board
 
-
-def traverse(win: cs.window, board, pos: Coord):
-    found = board[pos.y][pos.x] == "G"
+def traverse(win: cs.window, board, cpos):
+    found = board[cpos[0]][cpos[1]] == "G"
     while not found:
-        moves = possible_moves(board, pos)
+        moves = possible_moves(board, cpos)
         if len(moves) == 1:
-            board = update_and_draw(win, board, pos, "*", 10)
+            update_and_draw(win, board, cpos, "*", 50)
 
-            pos = pos + moves[0]
+            cpos = (cpos[0] + moves[0][0], cpos[1] + moves[0][1])
 
-            if board[pos.y][pos.x] == "G":
+            if board[cpos[0]][cpos[1]] == "G":
                 return board, True
         elif len(moves) > 1:
             for move in moves:
-                board = update_and_draw(win, board, pos, "*", 10)
+                update_and_draw(win, board, cpos, "*", 50)
 
-                board, found = traverse(win, board, pos + move)
+                board, found = traverse(win, board, (cpos[0] + move[0], cpos[1] + move[1]))
 
                 if found:
                     break
         else:
-            board = update_and_draw(win, board, pos, "*", 10)
+            update_and_draw(win, board, cpos, "*", 50)
 
             return board, False
 
@@ -104,7 +79,8 @@ def main(stdscr: cs.window):
 
     board, start = load_puzzle("puzzle1.txt")
 
-    stdscr.move(0, 0)
+    stdscr.clear()
+
     for i, row in enumerate(board):
         stdscr.addstr(f'{"".join(row)}\n')
 
