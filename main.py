@@ -1,7 +1,31 @@
 import curses as cs
 
-def load_puzzle(path: str) -> tuple[list[list[str]], tuple[int, int]]:
-    start = (0, 0)
+class Coord:
+    def __init__(self, y=0, x=0):
+        self.set(y, x)
+
+
+    def __add__(self, other):
+        copy = self.copy()
+        copy.y = copy.y + other.y
+        copy.x = copy.x + other.x
+
+        return copy
+
+    def __str__(self):
+        return f"{(self.x, self.y)}"
+
+    def set(self, y=0, x=0):
+        self.y = y
+        self.x = x
+
+
+    def copy(self):
+        return Coord(self.y, self.x)
+
+
+def load_puzzle(path: str) -> tuple[list[list[str]], Coord]:
+    start = Coord()
     board = []
     with open(path, "r") as file:
         for row, line in enumerate(file):
@@ -47,7 +71,7 @@ def traverse(win: cs.window, board, cpos):
     while not found:
         moves = possible_moves(board, cpos)
         if len(moves) == 1:
-            update_and_draw(win, board, cpos, "*", 50)
+            board = update_and_draw(win, board, pos, "*", 50)
 
             cpos = (cpos[0] + moves[0][0], cpos[1] + moves[0][1])
 
@@ -55,14 +79,14 @@ def traverse(win: cs.window, board, cpos):
                 return board, True
         elif len(moves) > 1:
             for move in moves:
-                update_and_draw(win, board, cpos, "*", 50)
+                board = update_and_draw(win, board, pos, "*", 50)
 
                 board, found = traverse(win, board, (cpos[0] + move[0], cpos[1] + move[1]))
 
                 if found:
                     break
         else:
-            update_and_draw(win, board, cpos, "*", 50)
+            board = update_and_draw(win, board, pos, "*", 50)
 
             return board, False
 
@@ -78,8 +102,6 @@ def main(stdscr: cs.window):
     cs.init_pair(2, cs.COLOR_GREEN, -1)
 
     board, start = load_puzzle("puzzle1.txt")
-
-    stdscr.clear()
 
     for i, row in enumerate(board):
         stdscr.addstr(f'{"".join(row)}\n')
@@ -98,7 +120,6 @@ def main(stdscr: cs.window):
     traverse(stdscr, board, start)
 
     stdscr.getkey()
-
 
 if __name__ == "__main__":
     cs.wrapper(main)
