@@ -6,10 +6,11 @@ class Coord:
 
 
     def __add__(self, other):
-        self.y = self.y + other.y
-        self.x = self.x + other.x
+        copy = self.copy()
+        copy.y = copy.y + other.y
+        copy.x = copy.x + other.x
 
-        return self.copy()
+        return copy
 
     def __str__(self):
         return f"{(self.x, self.y)}"
@@ -72,7 +73,7 @@ def traverse(win: cs.window, board, pos: Coord):
     while not found:
         moves = possible_moves(board, pos)
         if len(moves) == 1:
-            board = update_and_draw(win, board, pos, "*", 10)
+            board = update_and_draw(win, board, pos, "*", 50)
 
             pos = pos + moves[0]
 
@@ -80,14 +81,14 @@ def traverse(win: cs.window, board, pos: Coord):
                 return board, True
         elif len(moves) > 1:
             for move in moves:
-                board = update_and_draw(win, board, pos, "*", 10)
+                board = update_and_draw(win, board, pos, "*", 50)
 
                 board, found = traverse(win, board, pos + move)
 
                 if found:
                     break
         else:
-            board = update_and_draw(win, board, pos, "*", 10)
+            board = update_and_draw(win, board, pos, "*", 50)
 
             return board, False
 
