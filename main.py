@@ -14,9 +14,9 @@ class Coord:
     def __str__(self):
         return f"{(self.x, self.y)}"
 
-    def set(self, y=None, x=None):
-        self.y = y or 0
-        self.x = x or 0
+    def set(self, y=0, x=0):
+        self.y = y
+        self.x = x
 
 
     def copy(self):
@@ -104,7 +104,8 @@ def main(stdscr: cs.window):
 
     board, start = load_puzzle("puzzle1.txt")
 
-    stdscr.move(0, 0)
+    stdscr.scrollok(True)
+    stdscr.idlok(True)
     for i, row in enumerate(board):
         stdscr.addstr(f'{"".join(row)}\n')
 
@@ -122,7 +123,6 @@ def main(stdscr: cs.window):
     traverse(stdscr, board, start)
 
     stdscr.getkey()
-
 
 if __name__ == "__main__":
     cs.wrapper(main)
