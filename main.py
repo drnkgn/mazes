@@ -28,6 +28,41 @@ class Coord:
         return Coord(self.y, self.x)
 
 
+class _Board:
+    def __init__(self, filepath=""):
+        self.board = []
+        self.start = Coord()
+
+        if filepath != "":
+            self.load(filepath)
+
+
+    def __str__(self):
+        for row in self.board:
+            print("".join(row))
+
+
+    def __getitem__(self, pos: Coord):
+        return self.board[pos.y][pos.x]
+
+
+    def __setitem__(self, pos: Coord, value):
+        self.board[pos.y][pos.x] = value
+
+
+    def load(self, filepath):
+        with open(filepath, "r") as file:
+            for row, line in enumerate(file):
+                self.board.append(list(line.strip()))
+                col = line.find("S")
+
+                if line.find("S") > 0:
+                    self.start.set(row, col)
+
+
+    def traverse(self):
+        pass
+
 def load_puzzle(path: str) -> tuple[Board, Coord]:
     start = Coord()
     board = []
