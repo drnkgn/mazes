@@ -1,6 +1,6 @@
 class Coord:
     def __init__(self, y=0, x=0):
-        self.set(y, x)
+        self.update(y, x)
 
 
     def __add__(self, other):
@@ -10,12 +10,23 @@ class Coord:
 
         return copy
 
+    def __eq__(self, other):
+        return (self.x == other.x and self.y == other.y)
+
+
+    def __ne__(self, other):
+        return (self.x != other.x or self.y != other.y)
+
 
     def __str__(self):
         return f"{(self.x, self.y)}"
 
 
-    def set(self, y=0, x=0):
+    def __hash__(self):
+        return hash(f"{self.x}{self.y}")
+
+
+    def update(self, y, x):
         self.y = y
         self.x = x
 
@@ -25,12 +36,12 @@ class Coord:
 
 
 class Board:
-    def __init__(self, filepath=""):
+    def __init__(self, filepath, start="S", goal="G"):
         self.board = []
         self.start = Coord()
+        self.goal = Coord()
 
-        if filepath != "":
-            self.load(filepath)
+        self.load(filepath, start, goal)
 
 
     def __str__(self):
@@ -51,11 +62,15 @@ class Board:
         self.board[pos.y][pos.x] = value
 
 
-    def load(self, filepath):
+    def load(self, filepath, start, goal):
         with open(filepath, "r") as file:
             for row, line in enumerate(file):
                 self.board.append(list(line.strip()))
-                col = line.find("S")
+                scol = line.find(start)
+                ecol = line.find(goal)
 
-                if line.find("S") > 0:
-                    self.start.set(row, col)
+                if scol > 0: self.start.update(row, scol)
+                if ecol > 0: self.goal.update(row, ecol)
+
+        self.width = len(self.board[0])
+        self.height = len(self.board)
