@@ -8,16 +8,16 @@ def possible_moves(board: Board, pos: Coord) -> list[Coord]:
     """
     moves = []
 
-    if board[pos + Coord(0, 1)] not in ("█", ".", "S"):
+    if board[pos + Coord(0, 1)] not in ("█", "•", "S"):
         moves.append(Coord(0, 1))
 
-    if board[pos + Coord(1, 0)] not in ("█", ".", "S"):
+    if board[pos + Coord(1, 0)] not in ("█", "•", "S"):
         moves.append(Coord(1, 0))
 
-    if board[pos + Coord(0, -1)] not in ("█", ".", "S"):
+    if board[pos + Coord(0, -1)] not in ("█", "•", "S"):
         moves.append(Coord(0, -1))
 
-    if board[pos + Coord(-1, 0)] not in ("█", ".", "S"):
+    if board[pos + Coord(-1, 0)] not in ("█", "•", "S"):
         moves.append(Coord(-1, 0))
 
     return moves
@@ -47,15 +47,16 @@ def dfs(win: cs.window, board: Board):
     """
     stack = [board.start]
     paths = [[board.start]]
+    state = 0
 
     while len(stack) > 0:
         vpos = stack.pop()
         path = paths.pop().copy()
 
-        update_and_draw(win, board, vpos, ".", 0)
+        update_and_draw(win, board, vpos, "•", 0)
 
         if board[vpos] == "G":
-            return vpos, path[2:]
+            return vpos, path[2:], state
 
         moves = possible_moves(board, vpos)
         for move in moves:
@@ -65,7 +66,9 @@ def dfs(win: cs.window, board: Board):
                 stack.append(adjacent)
                 paths.append(path + [vpos])
 
-    return board.start, []
+                state = state + 1
+
+    return board.start, [], state
 
 
 def bfs(win: cs.window, board: Board):
@@ -74,15 +77,16 @@ def bfs(win: cs.window, board: Board):
     """
     queue = [board.start]
     paths = [[board.start]]
+    state = 0
 
     while len(queue) > 0:
         vpos = queue.pop(0)
         path = paths.pop(0).copy()
 
-        update_and_draw(win, board, vpos, ".", 0)
+        update_and_draw(win, board, vpos, "•", 0)
 
         if board[vpos] == "G":
-            return vpos, path[2:]
+            return vpos, path[2:], state
 
         moves = possible_moves(board, vpos)
 
@@ -93,7 +97,9 @@ def bfs(win: cs.window, board: Board):
                 queue.append(adjacent)
                 paths.append(path + [vpos])
 
-    return board.start, []
+                state = state + 1
+
+    return board.start, [], state
 
 
 def ucs(win: cs.window, board: Board):
@@ -102,12 +108,13 @@ def ucs(win: cs.window, board: Board):
     the board does not include the cost, i.e., numbers from 0-9, then UCS
     defaults to using Euclidean distance for the cost.
 
-    For boards without costs, e.g., puzzle 1-5, both UCS and A* works exactly
-    the same.
+    For boards without costs or have the same costs throughout, both UCS
+    works almost the same as BFS.
     """
     frontier = PQueue()
     expanded = []
     paths = {}
+    state = 0
     cost = 0
 
     frontier.update(board.start, 0)
@@ -117,10 +124,10 @@ def ucs(win: cs.window, board: Board):
         vpos, _ = frontier.min()
         path = paths.pop(vpos).copy()
 
-        update_and_draw(win, board, vpos, ".", 0)
+        update_and_draw(win, board, vpos, "•", 0)
 
         if board[vpos] == "G":
-            return vpos, path[2:]
+            return vpos, path[2:], state
 
         expanded.append(vpos)
 
@@ -128,21 +135,22 @@ def ucs(win: cs.window, board: Board):
         for move in moves:
             adjacent = vpos + move
 
+            cost = Coord.dist(adjacent, board.start)
+
             if board[adjacent] in string.digits:
-                cost = float(board[adjacent])
-            else:
-                cost = Coord.dist(adjacent, board.goal)
+                cost = cost + float(board[adjacent])
 
             if adjacent not in expanded and adjacent not in frontier:
                 update_and_draw(win, board, adjacent, "*", 20)
                 frontier.update(adjacent, cost)
                 paths[adjacent] = path + [vpos]
+                state = state + 1
             elif adjacent in frontier:
                 if cost < frontier.get(adjacent):
                     frontier.update(adjacent, cost)
 
 
-    return board.start, []
+    return board.start, [], state
 
 
 def a_star(win: cs.window, board: Board):
@@ -158,6 +166,7 @@ def a_star(win: cs.window, board: Board):
     frontier = PQueue()
     expanded = []
     paths = {}
+    state = 0
     cost = 0
 
     frontier.update(board.start, 0)
@@ -167,10 +176,10 @@ def a_star(win: cs.window, board: Board):
         vpos, _ = frontier.min()
         path = paths.pop(vpos).copy()
 
-        update_and_draw(win, board, vpos, ".", 0)
+        update_and_draw(win, board, vpos, "•", 0)
 
         if board[vpos] == "G":
-            return vpos, path[2:]
+            return vpos, path[2:], state
 
         expanded.append(vpos)
 
@@ -178,18 +187,19 @@ def a_star(win: cs.window, board: Board):
         for move in moves:
             adjacent = vpos + move
 
+            cost = Coord.dist(adjacent, board.start) + Coord.dist(adjacent, board.goal)
+
             if board[adjacent] in string.digits:
-                cost = float(board[adjacent]) + Coord.dist(adjacent, board.goal)
-            else:
-                cost = Coord.dist(adjacent, board.goal)
+                cost = cost + float(board[adjacent])
 
             if adjacent not in expanded and adjacent not in frontier:
                 update_and_draw(win, board, adjacent, "*", 20)
                 frontier.update(adjacent, cost)
                 paths[adjacent] = path + [vpos]
+                state = state + 1
             elif adjacent in frontier:
                 if cost < frontier.get(adjacent):
                     frontier.update(adjacent, cost)
 
 
-    return board.start, []
+    return board.start, [], state

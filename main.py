@@ -1,7 +1,9 @@
 from util import Board
 import curses as cs
 import string
+import time
 import algo
+
 
 def main(stdscr: cs.window):
     cs.start_color()
@@ -15,7 +17,7 @@ def main(stdscr: cs.window):
     cs.init_pair(5, 237, cs.COLOR_BLACK)
     cs.init_pair(6, cs.COLOR_WHITE, cs.COLOR_WHITE)
 
-    board = Board("puzzle6.txt")
+    board = Board("puzzle8.txt")
 
     for i, row in enumerate(board):
         for e in row:
@@ -35,16 +37,27 @@ def main(stdscr: cs.window):
 
         stdscr.move(i+1, 0)
 
-    goal, paths = algo.ucs(stdscr, board)
+
+    stdscr.move(board.height + 2, 0)
+    stdscr.addstr("Press any key to continue...")
+    stdscr.getkey()
+    stdscr.move(board.height + 2, 0)
+    stdscr.addstr("                            ")
+
+    start = time.time()
+    goal, paths, states = algo.a_star(stdscr, board)
+    end = time.time()
 
     for path in paths:
         stdscr.move(path.y, path.x)
-        stdscr.addch(".", cs.color_pair(3))
+        stdscr.addch("•", cs.color_pair(3))
 
     stdscr.refresh()
 
-    stdscr.move(board.height + 1, 0)
-    stdscr.addstr(f"Goal found at: {goal}")
+    stdscr.move(board.height+3, 0)
+    stdscr.addstr(f"Goal found at   : {goal}\n")
+    stdscr.addstr(f"Number of states: {states}\n")
+    stdscr.addstr(f"Time taken      : {end - start:.2f} s\n")
 
     stdscr.getkey()
 
