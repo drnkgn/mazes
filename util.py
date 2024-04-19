@@ -1,3 +1,5 @@
+import math
+
 class Coord:
     def __init__(self, y=0, x=0):
         self.update(y, x)
@@ -33,6 +35,11 @@ class Coord:
 
     def copy(self):
         return Coord(self.y, self.x)
+
+
+    @staticmethod
+    def dist(p, q):
+        return math.sqrt((p.x - q.x)**2 + (p.y - q.y)**2)
 
 
 class Board:
@@ -74,3 +81,41 @@ class Board:
 
         self.width = len(self.board[0])
         self.height = len(self.board)
+
+
+class PQueue:
+    def __init__(self):
+        self.map = {}
+
+
+    def __contains__(self, item):
+        return item in self.map
+
+
+    def get(self, key):
+        return self.map[key]
+
+    
+    def update(self, key, value):
+        self.map[key] = value
+
+
+    def min(self):
+        mkey = min(self.map, key=self.map.get) # pyright: ignore
+
+        return mkey, self.map.pop(mkey)
+
+
+    def max(self):
+        mkey = max(self.map, key=self.map.get) # pyright: ignore
+
+        return mkey, self.map.pop(mkey)
+
+
+    def empty(self):
+        return len(self.map) == 0
+
+
+    def insert(self, data, priority):
+        self.map[data] = priority
+

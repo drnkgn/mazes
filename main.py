@@ -1,6 +1,7 @@
 from collections.abc import Callable
 import curses as cs
-from util import Coord, Board
+
+from util import Coord, Board, PQueue
 
 def possible_moves(board: Board, pos: Coord):
     moves = []
@@ -83,8 +84,35 @@ def bfs(win: cs.window, board: Board, start: Coord):
     return start, []
 
 
-def ucs(win: cs.window, board: Board, start: Coord, heuristic: Callable[[Coord], int]):
-    return start
+def ucs(win: cs.window, board: Board, start: Coord, goal: Coord):
+    frontier = PQueue()
+    expanded = []
+
+    frontier.insert(start, 0)
+
+    while not frontier.empty():
+        vpos, _ = frontier.min()
+
+        update_and_draw(win, board, vpos, ".", 0)
+
+        if board[vpos] == "G":
+            return vpos, expanded
+
+        expanded.append(vpos)
+
+        moves = possible_moves(board, vpos)
+        for move in moves:
+            adjacent = vpos + move
+            cost = Coord.dist(adjacent, goal)
+            if adjacent not in expanded and adjacent not in frontier:
+                update_and_draw(win, board, adjacent, "*", 20)
+                frontier.insert(adjacent, cost)
+            elif adjacent in frontier:
+                if cost < frontier.get(adjacent):
+                    frontier.update(adjacent, cost)
+
+
+    return start, []
 
 
 def main(stdscr: cs.window):
@@ -96,7 +124,7 @@ def main(stdscr: cs.window):
     cs.init_pair(2, cs.COLOR_GREEN, -1)
     cs.init_pair(3, cs.COLOR_BLACK, cs.COLOR_YELLOW)
 
-    board = Board("puzzle3.txt")
+    board = Board("puzzle2.txt")
 
     for i, row in enumerate(board):
         stdscr.addstr(f'{"".join(row)}\n')
@@ -112,9 +140,9 @@ def main(stdscr: cs.window):
             stdscr.move(i+1, 0)
             stdscr.refresh()
 
-    goal, paths = bfs(stdscr, board, board.start)
+    goal, paths = ucs(stdscr, board, board.start, board.goal)
 
-    for path in paths[2:]:
+    for path in paths[1:]:
         stdscr.move(path.y, path.x)
         stdscr.addch(".", cs.color_pair(3))
 
