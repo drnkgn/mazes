@@ -1,5 +1,6 @@
-import curses as cs
 from util import Coord, Board, PQueue
+import curses as cs
+import string
 
 def possible_moves(board: Board, pos: Coord) -> list[Coord]:
     """
@@ -35,17 +36,15 @@ def update_and_draw(win: cs.window,
         board[pos] = char
 
         win.move(pos.y, pos.x)
-        win.addch(char)
+        win.addch(char, cs.color_pair(4))
         win.refresh()
         cs.napms(ms)
 
 
-"""
-Below are the searching algorithm implementations. All of them returns
-the goal position and the path that it founds.
-"""
-
 def dfs(win: cs.window, board: Board):
+    """
+    Returns the goal position and the path that that the algorithm traced.
+    """
     stack = [board.start]
     paths = [[board.start]]
 
@@ -70,6 +69,9 @@ def dfs(win: cs.window, board: Board):
 
 
 def bfs(win: cs.window, board: Board):
+    """
+    Returns the goal position and the path that that the algorithm traced.
+    """
     queue = [board.start]
     paths = [[board.start]]
 
@@ -95,9 +97,18 @@ def bfs(win: cs.window, board: Board):
 
 
 def ucs(win: cs.window, board: Board):
+    """
+    Returns the goal position and the path that that the algorithm traced. If
+    the board does not include the cost, i.e., numbers from 0-9, then UCS
+    defaults to using Euclidean distance for the cost.
+
+    For boards without costs, e.g., puzzle 1-5, both UCS and A* works exactly
+    the same.
+    """
     frontier = PQueue()
     expanded = []
     paths = {}
+    cost = 0
 
     frontier.update(board.start, 0)
     paths[board.start] = [board.start]
@@ -116,7 +127,12 @@ def ucs(win: cs.window, board: Board):
         moves = possible_moves(board, vpos)
         for move in moves:
             adjacent = vpos + move
-            cost = Coord.dist(adjacent, board.goal)
+
+            if board[adjacent] in string.digits:
+                cost = float(board[adjacent])
+            else:
+                cost = Coord.dist(adjacent, board.goal)
+
             if adjacent not in expanded and adjacent not in frontier:
                 update_and_draw(win, board, adjacent, "*", 20)
                 frontier.update(adjacent, cost)
@@ -130,9 +146,19 @@ def ucs(win: cs.window, board: Board):
 
 
 def a_star(win: cs.window, board: Board):
+    """
+    Returns the goal position and the path that that the algorithm traced. If
+    the board does not include the cost, i.e., numbers from 0-9, then A*
+    defaults to using Euclidean distance for the cost. Otherwise, A* will
+    combine the costs and the distance from the goal as the determining cost.
+
+    For boards without costs, e.g., puzzle 1-5, both UCS and A* works exactly
+    the same.
+    """
     frontier = PQueue()
     expanded = []
     paths = {}
+    cost = 0
 
     frontier.update(board.start, 0)
     paths[board.start] = [board.start]
@@ -151,7 +177,12 @@ def a_star(win: cs.window, board: Board):
         moves = possible_moves(board, vpos)
         for move in moves:
             adjacent = vpos + move
-            cost = Coord.dist(adjacent, board.goal)
+
+            if board[adjacent] in string.digits:
+                cost = float(board[adjacent]) + Coord.dist(adjacent, board.goal)
+            else:
+                cost = Coord.dist(adjacent, board.goal)
+
             if adjacent not in expanded and adjacent not in frontier:
                 update_and_draw(win, board, adjacent, "*", 20)
                 frontier.update(adjacent, cost)

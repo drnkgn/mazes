@@ -1,5 +1,6 @@
 from util import Board
 import curses as cs
+import string
 import algo
 
 def main(stdscr: cs.window):
@@ -7,26 +8,34 @@ def main(stdscr: cs.window):
     cs.use_default_colors()
     cs.curs_set(0)
 
-    cs.init_pair(1, cs.COLOR_RED, -1)
-    cs.init_pair(2, cs.COLOR_GREEN, -1)
-    cs.init_pair(3, cs.COLOR_BLACK, cs.COLOR_YELLOW)
+    cs.init_pair(1, cs.COLOR_RED, cs.COLOR_BLACK)
+    cs.init_pair(2, cs.COLOR_GREEN, cs.COLOR_BLACK)
+    cs.init_pair(3, cs.COLOR_BLACK, 215)
     cs.init_pair(4, cs.COLOR_WHITE, cs.COLOR_BLACK)
+    cs.init_pair(5, 237, cs.COLOR_BLACK)
+    cs.init_pair(6, cs.COLOR_WHITE, cs.COLOR_WHITE)
 
     board = Board("puzzle6.txt")
 
     for i, row in enumerate(board):
-        stdscr.addstr(f'{"".join(row)}\n', cs.color_pair(4))
+        for e in row:
+            if e in string.digits:
+                stdscr.addch(e, cs.color_pair(5))
+            elif e == "█":
+                stdscr.addch(" ", cs.color_pair(6))
+            else:
+                stdscr.addch(e, cs.color_pair(4))
 
         if "S" in row:
             stdscr.move(i, row.index("S"))
             stdscr.addch("█", cs.color_pair(2))
-            stdscr.move(i+1, 0)
         if "G" in row:
             stdscr.move(i, row.index("G"))
             stdscr.addch("█", cs.color_pair(1))
-            stdscr.move(i+1, 0)
 
-    goal, paths = algo.bfs(stdscr, board)
+        stdscr.move(i+1, 0)
+
+    goal, paths = algo.ucs(stdscr, board)
 
     for path in paths:
         stdscr.move(path.y, path.x)
