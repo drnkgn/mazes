@@ -52,15 +52,23 @@ class Coord:
 
     @staticmethod
     def dist(p, q):
-        """Computes the Euclidean distance between two coordinates."""
-        return math.sqrt((p.x - q.x)**2 + (p.y - q.y)**2)
+        """Computes the Manhattan distance between two coordinates."""
+        return abs(p.x - q.x) + (p.y - q.y)
 
 
 class Board:
-    def __init__(self, filepath, start="S", goal="G"):
+    def __init__(self, filepath,
+                 wall="█", start="S", goal="G", discovered="*", expanded="•"):
         self.board = []
         self.start = Coord()
         self.goal = Coord()
+        self.icon = dict(
+            wall=wall,
+            start=start,
+            goal=goal,
+            discovered=discovered,
+            expanded=expanded
+        )
 
         self.load(filepath, start, goal)
 
@@ -99,6 +107,35 @@ class Board:
         ```
         """
         self.board[pos.y][pos.x] = value
+
+
+    def adjacent(self, current: Coord):
+        """
+        Returns an interator of undiscovered adjacent nodes from the
+        current node.
+        """
+        return BoardAdjacentIterator(self, current)
+
+
+    def isgoal(self, node: Coord):
+        """
+        Checks if node is goal.
+        """
+        return self[node] == self.icon["goal"]
+
+
+    def discovered(self, node: Coord):
+        """
+        Checks if node is discovered (i.e., reached but not checked).
+        """
+        return self[node] == self.icon["discovered"]
+
+
+    def expanded(self, node: Coord):
+        """
+        Checks if node is expanded (i.e., has been checked).
+        """
+        return self[node] == self.icon["expanded"]
 
 
     def load(self, filepath, start, goal):
@@ -147,18 +184,50 @@ class PQueue:
 
     def min(self):
         """Returns and removes the element with the lowest priority."""
-        mkey = min(self.map, key=self.map.get) # pyright: ignore
+        key = min(self.map, key=self.map.get) # pyright: ignore
 
-        return mkey, self.map.pop(mkey)
+        return key, self.map.pop(key)
 
 
     def max(self):
         """Returns and removes the element with the highest priority."""
-        mkey = max(self.map, key=self.map.get) # pyright: ignore
+        key = max(self.map, key=self.map.get) # pyright: ignore
 
-        return mkey, self.map.pop(mkey)
+        return key, self.map.pop(key)
 
 
     def empty(self):
         """Test the emptiness of the queue."""
         return len(self.map) == 0
+
+
+class BoardAdjacentIterator:
+    def __init__(self, board: Board, current: Coord):
+        self.adjacent = self.possible_moves_(board, current)
+
+
+    def __iter__(self):
+        for node in self.adjacent:
+            yield node
+
+
+    def possible_moves_(self, board: Board, current: Coord) -> list[Coord]:
+        """
+        Returns a list of possible from the current position.
+        """
+        moves = []
+
+        if board[current + Coord(0, 1)] not in ("█", "•", "S"):
+            moves.append(current + Coord(0, 1))
+
+        if board[current + Coord(1, 0)] not in ("█", "•", "S"):
+            moves.append(current + Coord(1, 0))
+
+        if board[current + Coord(0, -1)] not in ("█", "•", "S"):
+            moves.append(current + Coord(0, -1))
+
+        if board[current + Coord(-1, 0)] not in ("█", "•", "S"):
+            moves.append(current + Coord(-1, 0))
+
+        return moves
+

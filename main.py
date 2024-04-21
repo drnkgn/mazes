@@ -17,7 +17,7 @@ def main(stdscr: cs.window):
     cs.init_pair(5, 237, cs.COLOR_BLACK)
     cs.init_pair(6, cs.COLOR_WHITE, cs.COLOR_WHITE)
 
-    board = Board("puzzle8.txt")
+    board = Board("puzzle9.txt")
 
     for i, row in enumerate(board):
         for e in row:
@@ -45,7 +45,7 @@ def main(stdscr: cs.window):
     stdscr.addstr("                            ")
 
     start = time.time()
-    goal, paths, states = algo.a_star(stdscr, board)
+    goal, paths, states = algo.ucs(stdscr, board)
     end = time.time()
 
     for path in paths:
