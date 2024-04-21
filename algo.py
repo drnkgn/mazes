@@ -40,7 +40,7 @@ def dfs(win: cs.window, board: Board):
 
         for adjacent in board.adjacent(current):
             if not board.discovered(current):
-                update_and_draw(win, board, adjacent, "*", 20)
+                update_and_draw(win, board, adjacent, "*", 5)
                 stack.append(adjacent)
                 paths.append(path + [current])
 
@@ -68,7 +68,7 @@ def bfs(win: cs.window, board: Board):
 
         for adjacent in board.adjacent(current):
             if not board.discovered(adjacent):
-                update_and_draw(win, board, adjacent, "*", 20)
+                update_and_draw(win, board, adjacent, "*", 5)
                 queue.append(adjacent)
                 paths.append(path + [current])
 
@@ -97,7 +97,7 @@ def greedy(win: cs.window, board: Board):
 
     while not frontier.empty():
         current, _ = frontier.min()
-        path = paths.pop(current).copy()
+        path = paths.pop(current)
 
         update_and_draw(win, board, current, "•", 0)
 
@@ -107,13 +107,10 @@ def greedy(win: cs.window, board: Board):
         expanded.append(current)
 
         for adjacent in board.adjacent(current):
-            cost = 0
-
-            if board[adjacent] in string.digits:
-                cost = float(board[adjacent])
+            cost = len(path)
 
             if adjacent not in expanded and not board.discovered(adjacent):
-                update_and_draw(win, board, adjacent, "*", 20)
+                update_and_draw(win, board, adjacent, "*", 5)
                 frontier.update(adjacent, cost)
                 paths[adjacent] = path + [current]
                 state = state + 1
@@ -140,7 +137,7 @@ def ucs(win: cs.window, board: Board):
 
     while not frontier.empty():
         current, _ = frontier.min()
-        path = paths.pop(current).copy()
+        path = paths.pop(current)
 
         update_and_draw(win, board, current, "•", 0)
 
@@ -153,7 +150,7 @@ def ucs(win: cs.window, board: Board):
             cost = len(path)
 
             if adjacent not in expanded and adjacent not in frontier:
-                update_and_draw(win, board, adjacent, "*", 20)
+                update_and_draw(win, board, adjacent, "*", 5)
                 frontier.update(adjacent, cost)
                 paths[adjacent] = path + [current]
                 state = state + 1
@@ -188,17 +185,16 @@ def a_star(win: cs.window, board: Board):
         for adjacent in board.adjacent(current):
             tentative = g_score[current] + Coord.dist(current, adjacent)
 
-            update_and_draw(win, board, adjacent, "*", 20)
+            g_score[adjacent] = tentative
+            f_score[adjacent] = tentative + heuristic(adjacent)
 
-            if tentative < g_score.get(adjacent, math.inf):
-                g_score[adjacent] = tentative
-                f_score[adjacent] = tentative + heuristic(adjacent)
+            if adjacent not in open_set:
+                update_and_draw(win, board, adjacent, "*", 5)
 
-                if adjacent not in open_set:
-                    open_set.update(adjacent, f_score[adjacent])
-                    paths[adjacent] = path + [current]
+                open_set.update(adjacent, f_score[adjacent])
+                paths[adjacent] = path + [current]
 
-                    states = states + 1
+                states = states + 1
 
 
     return board.start, [], states
@@ -216,7 +212,7 @@ def naive(win: cs.window, board: Board):
 
     while not frontier.empty():
         current, _ = frontier.min()
-        path = paths.pop(current).copy()
+        path = paths.pop(current)
 
         update_and_draw(win, board, current, "•", 0)
 
@@ -228,11 +224,8 @@ def naive(win: cs.window, board: Board):
         for adjacent in board.adjacent(current):
             cost = Coord.dist(adjacent, board.goal)
 
-            if board[adjacent] in string.digits:
-                cost = cost + float(board[adjacent])
-
             if adjacent not in expanded and not board.discovered(adjacent):
-                update_and_draw(win, board, adjacent, "*", 20)
+                update_and_draw(win, board, adjacent, "*", 5)
                 frontier.update(adjacent, cost)
                 paths[adjacent] = path + [current]
                 state = state + 1

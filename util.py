@@ -53,7 +53,7 @@ class Coord:
     @staticmethod
     def dist(p, q):
         """Computes the Manhattan distance between two coordinates."""
-        return abs(p.x - q.x) + (p.y - q.y)
+        return abs(p.x - q.x) + abs(p.y - q.y)
 
 
 class Board:
