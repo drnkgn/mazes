@@ -1,3 +1,4 @@
+import math
 from util import Coord, Board, PQueue
 import curses as cs
 import string
@@ -34,7 +35,7 @@ def dfs(win: cs.window, board: Board):
 
         update_and_draw(win, board, current, "•", 0)
 
-        if board.isgoal(current) == "G":
+        if board.isgoal(current):
             return current, path[2:], state
 
         for adjacent in board.adjacent(current):
@@ -151,9 +152,6 @@ def ucs(win: cs.window, board: Board):
         for adjacent in board.adjacent(current):
             cost = len(path)
 
-            if board[adjacent] in string.digits:
-                cost = cost + float(board[adjacent])
-
             if adjacent not in expanded and adjacent not in frontier:
                 update_and_draw(win, board, adjacent, "*", 20)
                 frontier.update(adjacent, cost)
@@ -164,48 +162,46 @@ def ucs(win: cs.window, board: Board):
 
 
 def a_star(win: cs.window, board: Board):
-    """
-    Returns the goal position and the path that that the algorithm traced. If
-    the board does not include the cost, i.e., numbers from 0-9, then A*
-    defaults to using Euclidean distance for the cost. Otherwise, A* will
-    combine the costs and the distance from the goal as the determining cost.
+    def heuristic(node: Coord):
+        return Coord.dist(node, board.goal)
 
-    For boards without costs, e.g., puzzle 1-5, both UCS and A* works exactly
-    the same.
-    """
-    frontier = PQueue()
-    expanded = []
+    open_set = PQueue()
+    g_score = {}
+    f_score = {}
     paths = {}
-    state = 0
-    cost = 0
+    states = 0
 
-    frontier.update(board.start, 0)
+    g_score[board.start] = 0
+    f_score[board.start] = heuristic(board.start)
+    open_set.update(board.start, f_score[board.start])
     paths[board.start] = [board.start]
 
-    while not frontier.empty():
-        current, _ = frontier.min()
-        path = paths.pop(current).copy()
+    while not open_set.empty():
+        current, _ = open_set.min()
+        path = paths.pop(current)
 
         update_and_draw(win, board, current, "•", 0)
 
         if board.isgoal(current):
-            return current, path[2:], state
-
-        expanded.append(current)
+            return current, path[2:], states
 
         for adjacent in board.adjacent(current):
-            cost = len(path) + Coord.dist(adjacent, board.goal)
+            tentative = g_score[current] + Coord.dist(current, adjacent)
 
-            if board[adjacent] in string.digits:
-                cost = cost + float(board[adjacent])
+            update_and_draw(win, board, adjacent, "*", 20)
 
-            if adjacent not in expanded and not board.discovered(adjacent):
-                update_and_draw(win, board, adjacent, "*", 20)
-                frontier.update(adjacent, cost)
-                paths[adjacent] = path + [current]
-                state = state + 1
+            if tentative < g_score.get(adjacent, math.inf):
+                g_score[adjacent] = tentative
+                f_score[adjacent] = tentative + heuristic(adjacent)
 
-    return board.start, [], state
+                if adjacent not in open_set:
+                    open_set.update(adjacent, f_score[adjacent])
+                    paths[adjacent] = path + [current]
+
+                    states = states + 1
+
+
+    return board.start, [], states
 
 
 def naive(win: cs.window, board: Board):

@@ -17,7 +17,7 @@ def main(stdscr: cs.window):
     cs.init_pair(5, 237, cs.COLOR_BLACK)
     cs.init_pair(6, cs.COLOR_WHITE, cs.COLOR_WHITE)
 
-    board = Board("puzzle9.txt")
+    board = Board("puzzle5.txt")
 
     for i, row in enumerate(board):
         for e in row:
