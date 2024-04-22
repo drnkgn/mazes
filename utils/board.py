@@ -1,4 +1,5 @@
 from .coord import Coord
+import codecs
 
 class Board:
     def __init__(self, filepath,
@@ -63,7 +64,7 @@ class Board:
 
     def load(self, filepath, start, goal):
         """Loads a board from a file."""
-        with open(filepath, "r") as file:
+        with codecs.open(filepath, "r", encoding="utf-8") as file:
             for row, line in enumerate(file):
                 self.board.append(list(line.strip()))
                 scol = line.find(start)
