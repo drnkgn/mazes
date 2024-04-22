@@ -1,4 +1,6 @@
-from util import Coord, Board, PQueue, PStack
+from utils.coord import Coord
+from utils.board import Board
+from utils.pqueue import PQueue, PStack
 import curses as cs
 import math
 
@@ -12,7 +14,7 @@ def update_and_draw(win: cs.window,
     Updates position on the board as visited both internally and during the
     animation.
     """
-    if board[pos] != "S" and board[pos] != "G":
+    if pos != board.goal and pos != board.start:
         board[pos] = char
 
         win.move(pos.y, pos.x)
@@ -22,9 +24,6 @@ def update_and_draw(win: cs.window,
 
 
 def dfs(win: cs.window, board: Board):
-    """
-    Returns the goal position and the path that that the algorithm traced.
-    """
     stack = [board.start]
     paths = [[board.start]]
     state = 0
@@ -35,13 +34,13 @@ def dfs(win: cs.window, board: Board):
 
         update_and_draw(win, board, current, "•", 0)
 
-        if board.isgoal(current):
+        if current == board.goal:
             return current, path[2:], state
 
-        for adjacent in board.adjacent(current):
-            if not board.discovered(current):
-                update_and_draw(win, board, adjacent, "*", 5)
-                stack.append(adjacent)
+        for neighbour in board.adjacent(current):
+            if board[neighbour] != "*":
+                update_and_draw(win, board, neighbour, "*", 5)
+                stack.append(neighbour)
                 paths.append(path + [current])
 
                 state = state + 1
@@ -50,9 +49,6 @@ def dfs(win: cs.window, board: Board):
 
 
 def bfs(win: cs.window, board: Board):
-    """
-    Returns the goal position and the path that that the algorithm found.
-    """
     queue = [board.start]
     paths = [[board.start]]
     state = 0
@@ -63,13 +59,13 @@ def bfs(win: cs.window, board: Board):
 
         update_and_draw(win, board, current, "•", 0)
 
-        if board.isgoal(current):
+        if current == board.goal:
             return current, path[2:], state
 
-        for adjacent in board.adjacent(current):
-            if not board.discovered(adjacent):
-                update_and_draw(win, board, adjacent, "*", 5)
-                queue.append(adjacent)
+        for neighbour in board.adjacent(current):
+            if board[neighbour] != "*":
+                update_and_draw(win, board, neighbour, "*", 5)
+                queue.append(neighbour)
                 paths.append(path + [current])
 
                 state = state + 1
@@ -78,15 +74,6 @@ def bfs(win: cs.window, board: Board):
 
 
 def greedy(win: cs.window, board: Board):
-    """
-    Returns the goal position and the path that that the algorithm traced. If
-    the board does not include the cost, i.e., numbers from 0-9, then A*
-    defaults to using Euclidean distance for the cost. Otherwise, A* will
-    combine the costs and the distance from the goal as the determining cost.
-
-    For boards without costs, e.g., puzzle 1-5, both UCS and A* works exactly
-    the same.
-    """
     frontier = PQueue()
     expanded = []
     paths = {}
@@ -96,66 +83,62 @@ def greedy(win: cs.window, board: Board):
     paths[board.start] = [board.start]
 
     while not frontier.empty():
-        current, _ = frontier.min()
+        current, _ = frontier.pop()
         path = paths.pop(current)
 
         update_and_draw(win, board, current, "•", 0)
 
-        if board.isgoal(current):
+        if current == board.goal:
             return current, path[2:], state
 
         expanded.append(current)
 
-        for adjacent in board.adjacent(current):
-            cost = Coord.dist(adjacent, board.goal)
+        for neighbour in board.adjacent(current):
+            cost = Coord.dist(neighbour, board.goal)
 
-            if adjacent not in expanded and not board.discovered(adjacent):
-                update_and_draw(win, board, adjacent, "*", 5)
-                frontier.update(adjacent, cost)
-                paths[adjacent] = path + [current]
+            if neighbour not in expanded:
+                update_and_draw(win, board, neighbour, "*", 5)
+                frontier.update(neighbour, cost)
+                paths[neighbour] = path + [current]
                 state = state + 1
 
     return board.start, [], state
 
 
 def ucs(win: cs.window, board: Board):
-    """
-    Returns the goal position and the path that that the algorithm traced. If
-    the board does not include the cost, i.e., numbers from 0-9, then UCS
-    defaults to using Euclidean distance for the cost.
-
-    For boards without costs or have the same costs throughout, both UCS
-    works almost the same as BFS.
-    """
-    frontier = PQueue()
-    expanded = []
+    states = 0
+    g_score = {}
+    open_set = PQueue()
     paths = {}
-    state = 0
 
-    frontier.update(board.start, 0)
+    g_score[board.start] = 0
+    open_set.update(board.start, 0)
     paths[board.start] = [board.start]
 
-    while not frontier.empty():
-        current, _ = frontier.min()
+    while not open_set.empty():
+        current, _ = open_set.pop()
         path = paths.pop(current)
 
         update_and_draw(win, board, current, "•", 0)
 
-        if board.isgoal(current):
-            return current, path[2:], state
+        if current == board.goal:
+            return current, path[2:], states
 
-        expanded.append(current)
+        for neighbour in board.adjacent(current):
+            tentative = g_score[current] + Coord.dist(current, neighbour)
 
-        for adjacent in board.adjacent(current):
-            cost = len(path)
+            if tentative < g_score.get(neighbour, math.inf):
+                g_score[neighbour] = tentative
 
-            if adjacent not in expanded and adjacent not in frontier:
-                update_and_draw(win, board, adjacent, "*", 5)
-                frontier.update(adjacent, cost)
-                paths[adjacent] = path + [current]
-                state = state + 1
+                if neighbour not in open_set:
+                    update_and_draw(win, board, current, "*", 5)
 
-    return board.start, [], state
+                    open_set.update(neighbour, g_score[neighbour])
+                    paths[neighbour] = path + [current]
+
+                    states = states + 1
+
+    return board.start, [], states
 
 
 def a_star(win: cs.window, board: Board):
@@ -174,26 +157,26 @@ def a_star(win: cs.window, board: Board):
     paths[board.start] = [board.start]
 
     while not open_set.empty():
-        current, _ = open_set.min()
+        current, _ = open_set.pop()
         path = paths.pop(current)
 
         update_and_draw(win, board, current, "•", 0)
 
-        if board.isgoal(current):
+        if current == board.goal:
             return current, path[2:], states
 
-        for adjacent in board.adjacent(current):
-            tentative = g_score[current] + Coord.dist(current, adjacent)
+        for neighbour in board.adjacent(current):
+            tentative = g_score[current] + Coord.dist(current, neighbour)
 
-            if tentative < g_score.get(adjacent, math.inf):
-                g_score[adjacent] = tentative
-                f_score[adjacent] = tentative + heuristic(adjacent)
+            if tentative < g_score.get(neighbour, math.inf):
+                g_score[neighbour] = tentative
+                f_score[neighbour] = tentative + heuristic(neighbour)
 
-                if adjacent not in open_set:
-                    update_and_draw(win, board, adjacent, "*", 5)
+                if neighbour not in open_set:
+                    update_and_draw(win, board, neighbour, "*", 5)
 
-                    open_set.update(adjacent, f_score[adjacent])
-                    paths[adjacent] = path + [current]
+                    open_set.update(neighbour, f_score[neighbour])
+                    paths[neighbour] = path + [current]
 
                     states = states + 1
 

@@ -1,4 +1,4 @@
-from coord import Coord
+from .coord import Coord
 
 class Board:
     def __init__(self, filepath,
@@ -61,27 +61,6 @@ class Board:
         return BoardAdjacentIterator(self, current)
 
 
-    def isgoal(self, node: Coord):
-        """
-        Checks if node is goal.
-        """
-        return self[node] == self.icon["goal"]
-
-
-    def discovered(self, node: Coord):
-        """
-        Checks if node is discovered (i.e., reached but not checked).
-        """
-        return self[node] == self.icon["discovered"]
-
-
-    def expanded(self, node: Coord):
-        """
-        Checks if node is expanded (i.e., has been checked).
-        """
-        return self[node] == self.icon["expanded"]
-
-
     def load(self, filepath, start, goal):
         """Loads a board from a file."""
         with open(filepath, "r") as file:
@@ -98,6 +77,9 @@ class Board:
 
 
 class BoardAdjacentIterator:
+    """
+    Returns an interator of valid adjacent node from the current node.
+    """
     def __init__(self, board: Board, current: Coord):
         self.adjacent = self.possible_moves_(board, current)
 

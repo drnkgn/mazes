@@ -1,4 +1,4 @@
-from utils import Board
+from utils.board import Board
 import curses as cs
 import string
 import time
@@ -16,7 +16,7 @@ def main(stdscr: cs.window):
     cs.init_pair(5, 237, cs.COLOR_BLACK)
     cs.init_pair(6, cs.COLOR_WHITE, cs.COLOR_WHITE)
 
-    board = Board("puzzle1.txt")
+    board = Board("puzzle2.txt")
 
     board_win = cs.newwin(board.height+1, cs.COLS, 0, 0)
     debug_win = cs.newwin(10, cs.COLS, board.height+2, 0)
@@ -49,7 +49,7 @@ def main(stdscr: cs.window):
     debug_win.refresh()
 
     start = time.time()
-    goal, paths, states = algo.greedy(board_win, board)
+    goal, paths, states = algo.ucs(board_win, board)
     end = time.time()
 
     for path in paths:
