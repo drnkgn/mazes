@@ -1,7 +1,7 @@
-import math
-from util import Coord, Board, PQueue
+from util import Coord, Board, PQueue, PStack
 import curses as cs
-import string
+import math
+
 
 def update_and_draw(win: cs.window,
                     board: Board,
@@ -107,7 +107,7 @@ def greedy(win: cs.window, board: Board):
         expanded.append(current)
 
         for adjacent in board.adjacent(current):
-            cost = len(path)
+            cost = Coord.dist(adjacent, board.goal)
 
             if adjacent not in expanded and not board.discovered(adjacent):
                 update_and_draw(win, board, adjacent, "*", 5)
@@ -162,7 +162,7 @@ def a_star(win: cs.window, board: Board):
     def heuristic(node: Coord):
         return Coord.dist(node, board.goal)
 
-    open_set = PQueue()
+    open_set = PStack()
     g_score = {}
     f_score = {}
     paths = {}
@@ -185,49 +185,16 @@ def a_star(win: cs.window, board: Board):
         for adjacent in board.adjacent(current):
             tentative = g_score[current] + Coord.dist(current, adjacent)
 
-            g_score[adjacent] = tentative
-            f_score[adjacent] = tentative + heuristic(adjacent)
+            if tentative < g_score.get(adjacent, math.inf):
+                g_score[adjacent] = tentative
+                f_score[adjacent] = tentative + heuristic(adjacent)
 
-            if adjacent not in open_set:
-                update_and_draw(win, board, adjacent, "*", 5)
+                if adjacent not in open_set:
+                    update_and_draw(win, board, adjacent, "*", 5)
 
-                open_set.update(adjacent, f_score[adjacent])
-                paths[adjacent] = path + [current]
+                    open_set.update(adjacent, f_score[adjacent])
+                    paths[adjacent] = path + [current]
 
-                states = states + 1
-
+                    states = states + 1
 
     return board.start, [], states
-
-
-def naive(win: cs.window, board: Board):
-    frontier = PQueue()
-    expanded = []
-    paths = {}
-    state = 0
-    cost = 0
-
-    frontier.update(board.start, 0)
-    paths[board.start] = [board.start]
-
-    while not frontier.empty():
-        current, _ = frontier.min()
-        path = paths.pop(current)
-
-        update_and_draw(win, board, current, "•", 0)
-
-        if board.isgoal(current):
-            return current, path[2:], state
-
-        expanded.append(current)
-
-        for adjacent in board.adjacent(current):
-            cost = Coord.dist(adjacent, board.goal)
-
-            if adjacent not in expanded and not board.discovered(adjacent):
-                update_and_draw(win, board, adjacent, "*", 5)
-                frontier.update(adjacent, cost)
-                paths[adjacent] = path + [current]
-                state = state + 1
-
-    return board.start, [], state

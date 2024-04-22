@@ -1,9 +1,8 @@
-from util import Board
+from utils import Board
 import curses as cs
 import string
 import time
 import algo
-
 
 def main(stdscr: cs.window):
     cs.start_color()
@@ -17,49 +16,55 @@ def main(stdscr: cs.window):
     cs.init_pair(5, 237, cs.COLOR_BLACK)
     cs.init_pair(6, cs.COLOR_WHITE, cs.COLOR_WHITE)
 
-    board = Board("puzzle7.txt")
+    board = Board("puzzle1.txt")
+
+    board_win = cs.newwin(board.height+1, cs.COLS, 0, 0)
+    debug_win = cs.newwin(10, cs.COLS, board.height+2, 0)
 
     for i, row in enumerate(board):
         for e in row:
             if e in string.digits:
-                stdscr.addch(e, cs.color_pair(5))
+                board_win.addch(e, cs.color_pair(5))
             elif e == "█":
-                stdscr.addch(" ", cs.color_pair(6))
+                board_win.addch(" ", cs.color_pair(6))
             else:
-                stdscr.addch(e, cs.color_pair(4))
+                board_win.addch(e, cs.color_pair(4))
 
         if "S" in row:
-            stdscr.move(i, row.index("S"))
-            stdscr.addch("█", cs.color_pair(2))
+            board_win.move(i, row.index("S"))
+            board_win.addch("█", cs.color_pair(2))
         if "G" in row:
-            stdscr.move(i, row.index("G"))
-            stdscr.addch("█", cs.color_pair(1))
+            board_win.move(i, row.index("G"))
+            board_win.addch("█", cs.color_pair(1))
 
-        stdscr.move(i+1, 0)
+        board_win.move(i+1, 0)
 
 
-    stdscr.move(board.height + 2, 0)
-    stdscr.addstr("Press any key to continue...")
-    stdscr.getkey()
-    stdscr.move(board.height + 2, 0)
-    stdscr.addstr("                            ")
+    board_win.refresh()
+
+    debug_win.addstr("Press any key to continue...")
+    debug_win.getkey()
+    debug_win.move(0, 0)
+    debug_win.addstr("                            ")
+    debug_win.refresh()
 
     start = time.time()
-    goal, paths, states = algo.a_star(stdscr, board)
+    goal, paths, states = algo.greedy(board_win, board)
     end = time.time()
 
     for path in paths:
-        stdscr.move(path.y, path.x)
-        stdscr.addch("•", cs.color_pair(3))
+        board_win.move(path.y, path.x)
+        board_win.addch("•", cs.color_pair(3))
 
-    stdscr.refresh()
+    board_win.refresh()
 
-    stdscr.move(board.height+3, 0)
-    stdscr.addstr(f"Goal found at   : {goal}\n")
-    stdscr.addstr(f"Number of states: {states}\n")
-    stdscr.addstr(f"Time taken      : {end - start:.2f} s\n")
+    debug_win.move(1, 0)
+    debug_win.addstr(f"Goal found at   : {goal}\n")
+    debug_win.addstr(f"Number of states: {states}\n")
+    debug_win.addstr(f"Time taken      : {end - start:.2f} s\n")
+    debug_win.refresh()
 
-    stdscr.getkey()
+    debug_win.getkey()
 
 
 if __name__ == "__main__":
