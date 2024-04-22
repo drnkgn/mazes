@@ -106,39 +106,37 @@ def greedy(win: cs.window, board: Board):
 
 
 def ucs(win: cs.window, board: Board):
-    states = 0
-    g_score = {}
-    open_set = PQueue()
+    frontier = PQueue()
+    expanded = []
     paths = {}
+    state = 0
 
-    g_score[board.start] = 0
-    open_set.update(board.start, 0)
+    frontier.update(board.start, 0)
     paths[board.start] = [board.start]
 
-    while not open_set.empty():
-        current, _ = open_set.pop()
+    while not frontier.empty():
+        current, _ = frontier.pop()
         path = paths.pop(current)
 
         update_and_draw(win, board, current, "•", 0)
 
         if current == board.goal:
-            return current, path[2:], states
+            return current, path[2:], state
 
-        for neighbour in board.adjacent(current):
-            tentative = g_score[current] + Coord.dist(current, neighbour)
+        expanded.append(current)
 
-            if tentative < g_score.get(neighbour, math.inf):
-                g_score[neighbour] = tentative
+        for adjacent in board.adjacent(current):
+            cost = len(path)
 
-                if neighbour not in open_set:
-                    update_and_draw(win, board, current, "*", 5)
+            if adjacent not in expanded and adjacent not in frontier:
+                update_and_draw(win, board, adjacent, "*", 5)
 
-                    open_set.update(neighbour, g_score[neighbour])
-                    paths[neighbour] = path + [current]
+                frontier.update(adjacent, cost)
+                paths[adjacent] = path + [current]
 
-                    states = states + 1
+                state = state + 1
 
-    return board.start, [], states
+    return board.start, [], state
 
 
 def a_star(win: cs.window, board: Board):
