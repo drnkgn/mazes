@@ -3,6 +3,7 @@ from utils.board import Board
 from utils.pqueue import PQueue, PStack
 import curses as cs
 import math
+import heapq
 
 
 def update_and_draw(win: cs.window,
@@ -76,11 +77,10 @@ def bfs(win: cs.window, board: Board):
 def greedy(win: cs.window, board: Board):
     frontier = PQueue()
     expanded = []
-    paths = {}
+    paths = { board.start: [board.start] }
     state = 0
 
     frontier.update(board.start, 0)
-    paths[board.start] = [board.start]
 
     while not frontier.empty():
         current, _ = frontier.pop()
@@ -106,13 +106,12 @@ def greedy(win: cs.window, board: Board):
 
 
 def ucs(win: cs.window, board: Board):
-    frontier = PQueue()
+    frontier = PStack()
     expanded = []
-    paths = {}
+    paths = { board.start: [board.start] }
     state = 0
 
     frontier.update(board.start, 0)
-    paths[board.start] = [board.start]
 
     while not frontier.empty():
         current, _ = frontier.pop()
@@ -143,16 +142,13 @@ def a_star(win: cs.window, board: Board):
     def heuristic(node: Coord):
         return Coord.dist(node, board.goal)
 
-    open_set = PStack()
-    g_score = {}
-    f_score = {}
-    paths = {}
+    open_set = PQueue()
+    g_score = { board.start: 0 }
+    f_score = { board.start: heuristic(board.start) }
+    paths = { board.start: [board.start] }
     states = 0
 
-    g_score[board.start] = 0
-    f_score[board.start] = heuristic(board.start)
     open_set.update(board.start, f_score[board.start])
-    paths[board.start] = [board.start]
 
     while not open_set.empty():
         current, _ = open_set.pop()
@@ -164,11 +160,11 @@ def a_star(win: cs.window, board: Board):
             return current, path[2:], states
 
         for neighbour in board.adjacent(current):
-            tentative = g_score[current] + Coord.dist(current, neighbour)
+            tentative = g_score[current] + 1 # since all action costs is 1
 
             if tentative < g_score.get(neighbour, math.inf):
                 g_score[neighbour] = tentative
-                f_score[neighbour] = tentative + heuristic(neighbour)
+                f_score[neighbour] = tentative + heuristic(neighbour) * 1.2
 
                 if neighbour not in open_set:
                     update_and_draw(win, board, neighbour, "*", 5)

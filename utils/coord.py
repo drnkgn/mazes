@@ -53,5 +53,5 @@ class Coord:
     @staticmethod
     def dist(p, q):
         """Computes the Euclidean distance between two coordinates."""
-        return math.floor(math.sqrt((p.x - q.x)**2 + (p.y - q.y)**2))
+        return math.sqrt((p.x - q.x)**2 + (p.y - q.y)**2)
 
