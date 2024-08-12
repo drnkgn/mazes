@@ -3,14 +3,11 @@ from utils.board import Board
 from utils.pqueue import PQueue, PStack
 import curses as cs
 import math
-import heapq
 
 
-def update_and_draw(win: cs.window,
-                    board: Board,
-                    pos: Coord,
-                    char: str,
-                    ms: int) -> None:
+def update_and_draw(
+    win: cs.window, board: Board, pos: Coord, char: str, ms: int
+) -> None:
     """
     Updates position on the board as visited both internally and during the
     animation.
@@ -77,7 +74,7 @@ def bfs(win: cs.window, board: Board):
 def greedy(win: cs.window, board: Board):
     frontier = PQueue()
     expanded = []
-    paths = { board.start: [board.start] }
+    paths = {board.start: [board.start]}
     state = 0
 
     frontier.update(board.start, 0)
@@ -108,7 +105,7 @@ def greedy(win: cs.window, board: Board):
 def ucs(win: cs.window, board: Board):
     frontier = PStack()
     expanded = []
-    paths = { board.start: [board.start] }
+    paths = {board.start: [board.start]}
     state = 0
 
     frontier.update(board.start, 0)
@@ -143,9 +140,9 @@ def a_star(win: cs.window, board: Board):
         return Coord.dist(node, board.goal)
 
     open_set = PQueue()
-    g_score = { board.start: 0 }
-    f_score = { board.start: heuristic(board.start) }
-    paths = { board.start: [board.start] }
+    g_score = {board.start: 0}
+    f_score = {board.start: heuristic(board.start)}
+    paths = {board.start: [board.start]}
     states = 0
 
     open_set.update(board.start, f_score[board.start])
@@ -160,7 +157,7 @@ def a_star(win: cs.window, board: Board):
             return current, path[2:], states
 
         for neighbour in board.adjacent(current):
-            tentative = g_score[current] + 1 # since all action costs is 1
+            tentative = g_score[current] + 1  # since all action costs is 1
 
             if tentative < g_score.get(neighbour, math.inf):
                 g_score[neighbour] = tentative
